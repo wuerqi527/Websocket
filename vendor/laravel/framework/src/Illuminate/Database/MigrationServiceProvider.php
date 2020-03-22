@@ -4,12 +4,18 @@ namespace Illuminate\Database;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Database\Migrations\Migrator;
-use Illuminate\Contracts\Support\DeferrableProvider;
 use Illuminate\Database\Migrations\MigrationCreator;
 use Illuminate\Database\Migrations\DatabaseMigrationRepository;
 
-class MigrationServiceProvider extends ServiceProvider implements DeferrableProvider
+class MigrationServiceProvider extends ServiceProvider
 {
+    /**
+     * Indicates if loading of the provider is deferred.
+     *
+     * @var bool
+     */
+    protected $defer = true;
+
     /**
      * Register the service provider.
      *

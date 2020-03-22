@@ -24,7 +24,7 @@ class LogManager implements LoggerInterface
     /**
      * The application instance.
      *
-     * @var \Illuminate\Contracts\Foundation\Application
+     * @var \Illuminate\Foundation\Application
      */
     protected $app;
 
@@ -45,7 +45,7 @@ class LogManager implements LoggerInterface
     /**
      * Create a new Log manager instance.
      *
-     * @param  \Illuminate\Contracts\Foundation\Application  $app
+     * @param  \Illuminate\Foundation\Application  $app
      * @return void
      */
     public function __construct($app)
@@ -292,8 +292,7 @@ class LogManager implements LoggerInterface
     {
         return new Monolog($this->parseChannel($config), [
             $this->prepareHandler(new SyslogHandler(
-                Str::snake($this->app['config']['app.name'], '-'),
-                $config['facility'] ?? LOG_USER, $this->level($config)
+                $this->app['config']['app.name'], $config['facility'] ?? LOG_USER, $this->level($config)
             ), $config),
         ]);
     }
@@ -331,7 +330,6 @@ class LogManager implements LoggerInterface
         }
 
         $with = array_merge(
-            ['level' => $this->level($config)],
             $config['with'] ?? [],
             $config['handler_with'] ?? []
         );

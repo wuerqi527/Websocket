@@ -39,11 +39,7 @@ class RouteServiceProvider extends ServiceProvider
 
         $this->mapWebRoutes();
 
-        $this->mapNotifyRoutes();
-
-        if (! \App::environment('production')) {
-            $this->mapTestRoutes();
-        }
+        //
     }
 
     /**
@@ -73,37 +69,5 @@ class RouteServiceProvider extends ServiceProvider
              ->middleware('api')
              ->namespace($this->namespace)
              ->group(base_path('routes/api.php'));
-    }
-
-
-    /**
-     * Define the "notify" routes for the application.
-     *
-     * These routes are typically stateless.
-     *
-     * @return void
-     */
-    protected function mapNotifyRoutes()
-    {
-        Route::prefix('notify')
-             ->middleware('api')
-             ->namespace($this->namespace)
-             ->group(base_path('routes/notify.php'));
-    }
-
-
-    /**
-     * Define the "api" routes for the application.
-     *
-     * These routes are use for testing.
-     *
-     * @return void
-     */
-    protected function mapTestRoutes()
-    {
-        Route::prefix('test')
-             ->middleware('api')
-             ->namespace($this->namespace)
-             ->group(base_path('routes/test.php'));
     }
 }

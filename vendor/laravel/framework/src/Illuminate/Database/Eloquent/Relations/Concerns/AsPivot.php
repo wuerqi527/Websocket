@@ -42,8 +42,6 @@ trait AsPivot
     {
         $instance = new static;
 
-        $instance->timestamps = $instance->hasTimestampAttributes($attributes);
-
         // The pivot model is a "dynamic" model since we will set the tables dynamically
         // for the instance. This allows it work for any intermediate tables for the
         // many to many relationship that are defined by this developer's classes.
@@ -58,6 +56,8 @@ trait AsPivot
         $instance->pivotParent = $parent;
 
         $instance->exists = $exists;
+
+        $instance->timestamps = $instance->hasTimestampAttributes();
 
         return $instance;
     }
@@ -75,9 +75,9 @@ trait AsPivot
     {
         $instance = static::fromAttributes($parent, [], $table, $exists);
 
-        $instance->timestamps = $instance->hasTimestampAttributes($attributes);
-
         $instance->setRawAttributes($attributes, true);
+
+        $instance->timestamps = $instance->hasTimestampAttributes();
 
         return $instance;
     }
@@ -111,18 +111,10 @@ trait AsPivot
     public function delete()
     {
         if (isset($this->attributes[$this->getKeyName()])) {
-            return (int) parent::delete();
+            return parent::delete();
         }
 
-        if ($this->fireModelEvent('deleting') === false) {
-            return 0;
-        }
-
-        $this->touchOwners();
-
-        return tap($this->getDeleteQuery()->delete(), function () {
-            $this->fireModelEvent('deleted', false);
-        });
+        return $this->getDeleteQuery()->delete();
     }
 
     /**
@@ -201,14 +193,13 @@ trait AsPivot
     }
 
     /**
-     * Determine if the pivot model or given attributes has timestamp attributes.
+     * Determine if the pivot model has timestamp attributes.
      *
-     * @param  $attributes  array|null
      * @return bool
      */
-    public function hasTimestampAttributes($attributes = null)
+    public function hasTimestampAttributes()
     {
-        return array_key_exists($this->getCreatedAtColumn(), $attributes ?? $this->attributes);
+        return array_key_exists($this->getCreatedAtColumn(), $this->attributes);
     }
 
     /**

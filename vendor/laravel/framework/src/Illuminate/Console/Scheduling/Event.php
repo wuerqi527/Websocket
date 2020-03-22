@@ -7,7 +7,6 @@ use Cron\CronExpression;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
 use GuzzleHttp\Client as HttpClient;
-use Illuminate\Support\Facades\Date;
 use Illuminate\Contracts\Mail\Mailer;
 use Symfony\Component\Process\Process;
 use Illuminate\Support\Traits\Macroable;
@@ -148,15 +147,12 @@ class Event
      *
      * @param  \Illuminate\Console\Scheduling\EventMutex  $mutex
      * @param  string  $command
-     * @param  \DateTimeZone|string $timezone
      * @return void
      */
-    public function __construct(EventMutex $mutex, $command, $timezone = null)
+    public function __construct(EventMutex $mutex, $command)
     {
         $this->mutex = $mutex;
         $this->command = $command;
-        $this->timezone = $timezone;
-
         $this->output = $this->getDefaultOutput();
     }
 
@@ -208,7 +204,9 @@ class Event
     {
         $this->callBeforeCallbacks($container);
 
-        Process::fromShellCommandline($this->buildCommand(), base_path(), null, null, null)->run();
+        (new Process(
+            $this->buildCommand(), base_path(), null, null, null
+        ))->run();
 
         $this->callAfterCallbacks($container);
     }
@@ -223,7 +221,9 @@ class Event
     {
         $this->callBeforeCallbacks($container);
 
-        Process::fromShellCommandline($this->buildCommand(), base_path(), null, null, null)->run();
+        (new Process(
+            $this->buildCommand(), base_path(), null, null, null
+        ))->run();
     }
 
     /**
@@ -388,7 +388,7 @@ class Event
      */
     public function emailOutputTo($addresses, $onlyIfOutputExists = false)
     {
-        $this->ensureOutputIsBeingCaptured();
+        $this->ensureOutputIsBeingCapturedForEmail();
 
         $addresses = Arr::wrap($addresses);
 
@@ -408,6 +408,18 @@ class Event
     public function emailWrittenOutputTo($addresses)
     {
         return $this->emailOutputTo($addresses, true);
+    }
+
+    /**
+     * Ensure that output is being captured for email.
+     *
+     * @return void
+     *
+     * @deprecated See ensureOutputIsBeingCaptured.
+     */
+    protected function ensureOutputIsBeingCapturedForEmail()
+    {
+        $this->ensureOutputIsBeingCaptured();
     }
 
     /**
@@ -703,7 +715,7 @@ class Event
      */
     public function nextRunDate($currentTime = 'now', $nth = 0, $allowCurrentDate = false)
     {
-        return Date::instance(CronExpression::factory(
+        return Carbon::instance(CronExpression::factory(
             $this->getExpression()
         )->getNextRunDate($currentTime, $nth, $allowCurrentDate, $this->timezone));
     }

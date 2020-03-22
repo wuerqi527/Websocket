@@ -309,7 +309,9 @@ trait InteractsWithInput
     {
         $files = $this->files->all();
 
-        return $this->convertedFiles = $this->convertedFiles ?? $this->convertUploadedFiles($files);
+        return $this->convertedFiles
+                    ? $this->convertedFiles
+                    : $this->convertedFiles = $this->convertUploadedFiles($files);
     }
 
     /**

@@ -5,6 +5,7 @@ namespace Illuminate\Queue;
 use Pheanstalk\Pheanstalk;
 use Pheanstalk\Job as PheanstalkJob;
 use Illuminate\Queue\Jobs\BeanstalkdJob;
+use Pheanstalk\Contract\PheanstalkInterface;
 use Illuminate\Contracts\Queue\Queue as QueueContract;
 
 class BeanstalkdQueue extends Queue implements QueueContract
@@ -31,25 +32,16 @@ class BeanstalkdQueue extends Queue implements QueueContract
     protected $timeToRun;
 
     /**
-     * The maximum number of seconds to block for a job.
-     *
-     * @var int
-     */
-    protected $blockFor;
-
-    /**
      * Create a new Beanstalkd queue instance.
      *
      * @param  \Pheanstalk\Pheanstalk  $pheanstalk
      * @param  string  $default
      * @param  int  $timeToRun
-     * @param  int  $blockFor
      * @return void
      */
-    public function __construct(Pheanstalk $pheanstalk, $default, $timeToRun, $blockFor = 0)
+    public function __construct(Pheanstalk $pheanstalk, $default, $timeToRun)
     {
         $this->default = $default;
-        $this->blockFor = $blockFor;
         $this->timeToRun = $timeToRun;
         $this->pheanstalk = $pheanstalk;
     }
@@ -126,7 +118,11 @@ class BeanstalkdQueue extends Queue implements QueueContract
     {
         $queue = $this->getQueue($queue);
 
-        $job = $this->pheanstalk->watchOnly($queue)->reserveWithTimeout($this->blockFor);
+        $this->pheanstalk->watchOnly($queue);
+
+        $job = interface_exists(PheanstalkInterface::class)
+                    ? $this->pheanstalk->reserveWithTimeout(0)
+                    : $this->pheanstalk->reserve(0);
 
         if ($job instanceof PheanstalkJob) {
             return new BeanstalkdJob(

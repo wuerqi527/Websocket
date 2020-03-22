@@ -25,7 +25,6 @@ use Illuminate\Foundation\Console\RouteListCommand;
 use Illuminate\Foundation\Console\ViewCacheCommand;
 use Illuminate\Foundation\Console\ViewClearCommand;
 use Illuminate\Session\Console\SessionTableCommand;
-use Illuminate\Contracts\Support\DeferrableProvider;
 use Illuminate\Foundation\Console\PolicyMakeCommand;
 use Illuminate\Foundation\Console\RouteCacheCommand;
 use Illuminate\Foundation\Console\RouteClearCommand;
@@ -73,8 +72,15 @@ use Illuminate\Database\Console\Migrations\InstallCommand as MigrateInstallComma
 use Illuminate\Database\Console\Migrations\RefreshCommand as MigrateRefreshCommand;
 use Illuminate\Database\Console\Migrations\RollbackCommand as MigrateRollbackCommand;
 
-class ArtisanServiceProvider extends ServiceProvider implements DeferrableProvider
+class ArtisanServiceProvider extends ServiceProvider
 {
+    /**
+     * Indicates if loading of the provider is deferred.
+     *
+     * @var bool
+     */
+    protected $defer = true;
+
     /**
      * The commands to be registered.
      *

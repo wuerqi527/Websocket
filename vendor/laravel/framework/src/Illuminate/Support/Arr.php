@@ -313,9 +313,17 @@ class Arr
      */
     public static function has($array, $keys)
     {
+        if (is_null($keys)) {
+            return false;
+        }
+
         $keys = (array) $keys;
 
-        if (! $array || $keys === []) {
+        if (! $array) {
+            return false;
+        }
+
+        if ($keys === []) {
             return false;
         }
 
@@ -541,9 +549,11 @@ class Arr
         if (is_null($seed)) {
             shuffle($array);
         } else {
-            mt_srand($seed);
-            shuffle($array);
-            mt_srand();
+            srand($seed);
+
+            usort($array, function () {
+                return rand(-1, 1);
+            });
         }
 
         return $array;

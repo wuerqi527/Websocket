@@ -14,7 +14,7 @@ return [
     */
 
     'defaults' => [
-        'guard' => 'api',
+        'guard' => 'web',
         'passwords' => 'users',
     ],
 
@@ -36,14 +36,13 @@ return [
     */
 
     'guards' => [
-
         'web' => [
             'driver' => 'session',
             'provider' => 'users',
         ],
 
         'api' => [
-            'driver' => 'adv_token',
+            'driver' => 'token',
             'provider' => 'users',
         ],
     ],
@@ -68,8 +67,7 @@ return [
     'providers' => [
         'users' => [
             'driver' => 'eloquent',
-            'model' => App\Models\User::class,
-            'table' => 'users',
+            'model' => App\User::class,
         ],
 
         // 'users' => [
@@ -99,14 +97,6 @@ return [
             'table' => 'password_resets',
             'expire' => 60,
         ],
-    ],
-
-    /**
-     * Basic Auth Account
-     */
-    'basic_auth' => [
-        'user'     => env('BASIC_AUTH_USER', 'gaopeng'),
-        'password' => env('BASIC_AUTH_PW', 'ohmyboy'),
     ],
 
 ];

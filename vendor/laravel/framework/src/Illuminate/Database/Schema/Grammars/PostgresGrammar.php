@@ -642,7 +642,7 @@ class PostgresGrammar extends Grammar
      */
     protected function typeDateTime(Fluent $column)
     {
-        return $this->typeTimestamp($column);
+        return "timestamp($column->precision) without time zone";
     }
 
     /**
@@ -653,7 +653,7 @@ class PostgresGrammar extends Grammar
      */
     protected function typeDateTimeTz(Fluent $column)
     {
-        return $this->typeTimestampTz($column);
+        return "timestamp($column->precision) with time zone";
     }
 
     /**

@@ -15,6 +15,7 @@ use Illuminate\Contracts\Queue\QueueableEntity;
 use Illuminate\Database\Eloquent\Relations\Pivot;
 use Illuminate\Contracts\Queue\QueueableCollection;
 use Illuminate\Support\Collection as BaseCollection;
+use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Database\ConnectionResolverInterface as Resolver;
 
 abstract class Model implements ArrayAccess, Arrayable, Jsonable, JsonSerializable, QueueableEntity, UrlRoutable
@@ -443,7 +444,9 @@ abstract class Model implements ArrayAccess, Arrayable, Jsonable, JsonSerializab
      */
     public static function onWriteConnection()
     {
-        return static::query()->useWritePdo();
+        $instance = new static;
+
+        return $instance->newQuery()->useWritePdo();
     }
 
     /**
@@ -454,7 +457,7 @@ abstract class Model implements ArrayAccess, Arrayable, Jsonable, JsonSerializab
      */
     public static function all($columns = ['*'])
     {
-        return static::query()->get(
+        return (new static)->newQuery()->get(
             is_array($columns) ? $columns : func_get_args()
         );
     }
@@ -467,7 +470,7 @@ abstract class Model implements ArrayAccess, Arrayable, Jsonable, JsonSerializab
      */
     public static function with($relations)
     {
-        return static::query()->with(
+        return (new static)->newQuery()->with(
             is_string($relations) ? func_get_args() : $relations
         );
     }
@@ -500,21 +503,6 @@ abstract class Model implements ArrayAccess, Arrayable, Jsonable, JsonSerializab
         $relations = is_string($relations) ? func_get_args() : $relations;
 
         $this->newCollection([$this])->loadMissing($relations);
-
-        return $this;
-    }
-
-    /**
-     * Eager load relation counts on the model.
-     *
-     * @param  array|string  $relations
-     * @return $this
-     */
-    public function loadCount($relations)
-    {
-        $relations = is_string($relations) ? func_get_args() : $relations;
-
-        $this->newCollection([$this])->loadCount($relations);
 
         return $this;
     }
@@ -1044,7 +1032,11 @@ abstract class Model implements ArrayAccess, Arrayable, Jsonable, JsonSerializab
      */
     protected function newBaseQueryBuilder()
     {
-        return $this->getConnection()->query();
+        $connection = $this->getConnection();
+
+        return new QueryBuilder(
+            $connection, $connection->getQueryGrammar(), $connection->getPostProcessor()
+        );
     }
 
     /**
@@ -1285,9 +1277,13 @@ abstract class Model implements ArrayAccess, Arrayable, Jsonable, JsonSerializab
      */
     public function getTable()
     {
-        return isset($this->table)
-            ? $this->table
-            : Str::snake(Str::pluralStudly(class_basename($this)));
+        if (! isset($this->table)) {
+            return str_replace(
+                '\\', '', Str::snake(Str::plural(class_basename($this)))
+            );
+        }
+
+        return $this->table;
     }
 
     /**

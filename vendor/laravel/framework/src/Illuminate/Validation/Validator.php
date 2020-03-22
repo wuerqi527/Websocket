@@ -319,7 +319,7 @@ class Validator implements ValidatorContract
     }
 
     /**
-     * Get the attributes and values that were validated.
+     * Return validated value.
      *
      * @return array
      *
@@ -1085,7 +1085,7 @@ class Validator implements ValidatorContract
      *
      * @throws \RuntimeException
      */
-    public function getPresenceVerifierFor($connection)
+    protected function getPresenceVerifierFor($connection)
     {
         return tap($this->getPresenceVerifier(), function ($verifier) use ($connection) {
             $verifier->setConnection($connection);

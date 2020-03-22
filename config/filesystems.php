@@ -64,19 +64,6 @@ return [
             'url' => env('AWS_URL'),
         ],
 
-        'cos' => [
-            'driver' => 'cosv5',
-            'region' => env('COSV5_REGION', 'sh'),
-            'credentials' => [
-                'appId'     => env('COSV5_APP_ID'),
-                'secretId'  => env('COSV5_SECRET_ID'),
-                'secretKey' => env('COSV5_SECRET_KEY'),
-            ],
-            'timeout'         => env('COSV5_TIMEOUT', 60),
-            'connect_timeout' => env('COSV5_CONNECT_TIMEOUT', 60),
-            'bucket'          => env('COSV5_BUCKET'),
-            'cdn'             => env('COSV5_CDN'),
-        ],
     ],
 
 ];

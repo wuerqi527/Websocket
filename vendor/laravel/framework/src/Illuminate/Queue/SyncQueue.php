@@ -116,7 +116,7 @@ class SyncQueue extends Queue implements QueueContract
     {
         $this->raiseExceptionOccurredJobEvent($queueJob, $e);
 
-        $queueJob->fail($e);
+        FailingJob::handle($this->connectionName, $queueJob, $e);
 
         throw $e;
     }

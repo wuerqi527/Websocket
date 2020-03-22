@@ -30,6 +30,9 @@ use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
 use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 use Symfony\Component\HttpKernel\Exception\UnsupportedMediaTypeHttpException;
 
+/**
+ * @group legacy
+ */
 class FlattenExceptionTest extends TestCase
 {
     public function testStatusCode()
@@ -237,6 +240,10 @@ class FlattenExceptionTest extends TestCase
 
     public function testArguments()
     {
+        if (\PHP_VERSION_ID >= 70400) {
+            $this->markTestSkipped('PHP 7.4 removes arguments from exception traces.');
+        }
+
         $dh = opendir(__DIR__);
         $fh = tmpfile();
 
@@ -294,22 +301,30 @@ class FlattenExceptionTest extends TestCase
 
         // assertEquals() does not like NAN values.
         $this->assertEquals($array[$i][0], 'float');
-        $this->assertTrue(is_nan($array[$i++][1]));
+        $this->assertNan($array[$i][1]);
     }
 
     public function testRecursionInArguments()
     {
+        if (\PHP_VERSION_ID >= 70400) {
+            $this->markTestSkipped('PHP 7.4 removes arguments from exception traces.');
+        }
+
         $a = null;
         $a = ['foo', [2, &$a]];
         $exception = $this->createException($a);
 
         $flattened = FlattenException::create($exception);
         $trace = $flattened->getTrace();
-        $this->assertContains('*DEEP NESTED ARRAY*', serialize($trace));
+        $this->assertStringContainsString('*DEEP NESTED ARRAY*', serialize($trace));
     }
 
     public function testTooBigArray()
     {
+        if (\PHP_VERSION_ID >= 70400) {
+            $this->markTestSkipped('PHP 7.4 removes arguments from exception traces.');
+        }
+
         $a = [];
         for ($i = 0; $i < 20; ++$i) {
             for ($j = 0; $j < 50; ++$j) {
@@ -329,8 +344,8 @@ class FlattenExceptionTest extends TestCase
 
         $serializeTrace = serialize($trace);
 
-        $this->assertContains('*SKIPPED over 10000 entries*', $serializeTrace);
-        $this->assertNotContains('*value1*', $serializeTrace);
+        $this->assertStringContainsString('*SKIPPED over 10000 entries*', $serializeTrace);
+        $this->assertStringNotContainsString('*value1*', $serializeTrace);
     }
 
     public function testAnonymousClass()
@@ -344,6 +359,41 @@ class FlattenExceptionTest extends TestCase
         }))));
 
         $this->assertSame('Class "RuntimeException@anonymous" blah.', $flattened->getMessage());
+    }
+
+    public function testToStringEmptyMessage()
+    {
+        $exception = new \RuntimeException();
+
+        $flattened = FlattenException::create($exception);
+
+        $this->assertSame($exception->getTraceAsString(), $flattened->getTraceAsString());
+        $this->assertSame($exception->__toString(), $flattened->getAsString());
+    }
+
+    public function testToString()
+    {
+        $test = function ($a, $b, $c, $d) {
+            return new \RuntimeException('This is a test message');
+        };
+
+        $exception = $test('foo123', 1, null, 1.5);
+
+        $flattened = FlattenException::create($exception);
+
+        $this->assertSame($exception->getTraceAsString(), $flattened->getTraceAsString());
+        $this->assertSame($exception->__toString(), $flattened->getAsString());
+    }
+
+    public function testToStringParent()
+    {
+        $exception = new \LogicException('This is message 1');
+        $exception = new \RuntimeException('This is messsage 2', 500, $exception);
+
+        $flattened = FlattenException::create($exception);
+
+        $this->assertSame($exception->getTraceAsString(), $flattened->getTraceAsString());
+        $this->assertSame($exception->__toString(), $flattened->getAsString());
     }
 
     private function createException($foo)

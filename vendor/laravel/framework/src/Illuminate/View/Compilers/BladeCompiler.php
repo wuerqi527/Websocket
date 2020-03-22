@@ -4,7 +4,6 @@ namespace Illuminate\View\Compilers;
 
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
-use InvalidArgumentException;
 
 class BladeCompiler extends Compiler implements CompilerInterface
 {
@@ -118,8 +117,7 @@ class BladeCompiler extends Compiler implements CompilerInterface
         }
 
         if (! is_null($this->cachePath)) {
-            $contents = $this->compileString($this->files->get($this->getPath())).
-                        "\n<?php /* {$this->getPath()} */ ?>";
+            $contents = $this->compileString($this->files->get($this->getPath()));
 
             $this->files->put($this->getCompiledPath($this->getPath()), $contents);
         }
@@ -462,7 +460,7 @@ class BladeCompiler extends Compiler implements CompilerInterface
         $this->directive($alias, function ($expression) use ($path) {
             $expression = $this->stripParentheses($expression) ?: '[]';
 
-            return "<?php echo \$__env->make('{$path}', {$expression}, \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>";
+            return "<?php echo \$__env->make('{$path}', {$expression}, \Illuminate\Support\Arr::except(get_defined_vars(), array('__data', '__path')))->render(); ?>";
         });
     }
 
@@ -475,10 +473,6 @@ class BladeCompiler extends Compiler implements CompilerInterface
      */
     public function directive($name, callable $handler)
     {
-        if (! preg_match('/^\w+(?:::\w+)?$/x', $name)) {
-            throw new InvalidArgumentException("The directive name [{$name}] is not valid. Directive names must only contain alphanumeric characters and underscores.");
-        }
-
         $this->customDirectives[$name] = $handler;
     }
 

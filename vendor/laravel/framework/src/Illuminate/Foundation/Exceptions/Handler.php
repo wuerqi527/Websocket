@@ -99,8 +99,8 @@ class Handler implements ExceptionHandlerContract
             return;
         }
 
-        if (is_callable($reportCallable = [$e, 'report'])) {
-            return $this->container->call($reportCallable);
+        if (method_exists($e, 'report')) {
+            return $e->report();
         }
 
         try {
@@ -151,7 +151,7 @@ class Handler implements ExceptionHandlerContract
         try {
             return array_filter([
                 'userId' => Auth::id(),
-                // 'email' => Auth::user() ? Auth::user()->email : null,
+                'email' => Auth::user() ? Auth::user()->email : null,
             ]);
         } catch (Throwable $e) {
             return [];
@@ -249,7 +249,7 @@ class Handler implements ExceptionHandlerContract
     protected function invalid($request, ValidationException $exception)
     {
         return redirect($exception->redirectTo ?? url()->previous())
-                    ->withInput(Arr::except($request->input(), $this->dontFlash))
+                    ->withInput(array_except($request->input(), $this->dontFlash))
                     ->withErrors($exception->errors(), $exception->errorBag);
     }
 
@@ -366,10 +366,10 @@ class Handler implements ExceptionHandlerContract
     /**
      * Render the given HttpException.
      *
-     * @param  \Symfony\Component\HttpKernel\Exception\HttpExceptionInterface  $e
+     * @param  \Symfony\Component\HttpKernel\Exception\HttpException  $e
      * @return \Symfony\Component\HttpFoundation\Response
      */
-    protected function renderHttpException(HttpExceptionInterface $e)
+    protected function renderHttpException(HttpException $e)
     {
         $this->registerErrorViewPaths();
 

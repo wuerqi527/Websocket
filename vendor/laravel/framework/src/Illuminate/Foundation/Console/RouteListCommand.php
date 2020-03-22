@@ -27,6 +27,13 @@ class RouteListCommand extends Command
     protected $description = 'List all registered routes';
 
     /**
+     * The router instance.
+     *
+     * @var \Illuminate\Routing\Router
+     */
+    protected $router;
+
+    /**
      * An array of all the registered routes.
      *
      * @var \Illuminate\Routing\RouteCollection
@@ -41,13 +48,6 @@ class RouteListCommand extends Command
     protected $headers = ['Domain', 'Method', 'URI', 'Name', 'Action', 'Middleware'];
 
     /**
-     * The columns to display when using the "compact" flag.
-     *
-     * @var array
-     */
-    protected $compactColumns = ['method', 'uri', 'action'];
-
-    /**
      * Create a new route command instance.
      *
      * @param  \Illuminate\Routing\Router  $router
@@ -57,6 +57,7 @@ class RouteListCommand extends Command
     {
         parent::__construct();
 
+        $this->router = $router;
         $this->routes = $router->getRoutes();
     }
 
@@ -67,15 +68,11 @@ class RouteListCommand extends Command
      */
     public function handle()
     {
-        if (empty($this->routes)) {
+        if (count($this->routes) === 0) {
             return $this->error("Your application doesn't have any routes.");
         }
 
-        if (empty($routes = $this->getRoutes())) {
-            return $this->error("Your application doesn't have any routes matching the given criteria.");
-        }
-
-        $this->displayRoutes($routes);
+        $this->displayRoutes($this->getRoutes());
     }
 
     /**
@@ -87,7 +84,7 @@ class RouteListCommand extends Command
     {
         $routes = collect($this->routes)->map(function ($route) {
             return $this->getRouteInformation($route);
-        })->filter()->all();
+        })->all();
 
         if ($sort = $this->option('sort')) {
             $routes = $this->sortRoutes($sort, $routes);
@@ -97,7 +94,7 @@ class RouteListCommand extends Command
             $routes = array_reverse($routes);
         }
 
-        return $this->pluckColumns($routes);
+        return array_filter($routes);
     }
 
     /**
@@ -109,7 +106,7 @@ class RouteListCommand extends Command
     protected function getRouteInformation(Route $route)
     {
         return $this->filterRoute([
-            'domain' => $route->domain(),
+            'host'   => $route->domain(),
             'method' => implode('|', $route->methods()),
             'uri'    => $route->uri(),
             'name'   => $route->getName(),
@@ -125,24 +122,11 @@ class RouteListCommand extends Command
      * @param  array  $routes
      * @return array
      */
-    protected function sortRoutes($sort, array $routes)
+    protected function sortRoutes($sort, $routes)
     {
         return Arr::sort($routes, function ($route) use ($sort) {
             return $route[$sort];
         });
-    }
-
-    /**
-     * Remove unnecessary columns from the routes.
-     *
-     * @param  array  $routes
-     * @return array
-     */
-    protected function pluckColumns(array $routes)
-    {
-        return array_map(function ($route) {
-            return Arr::only($route, $this->getColumns());
-        }, $routes);
     }
 
     /**
@@ -153,7 +137,7 @@ class RouteListCommand extends Command
      */
     protected function displayRoutes(array $routes)
     {
-        $this->table($this->getHeaders(), $routes);
+        $this->table($this->headers, $routes);
     }
 
     /**
@@ -187,36 +171,6 @@ class RouteListCommand extends Command
     }
 
     /**
-     * Get the table headers for the visible columns.
-     *
-     * @return array
-     */
-    protected function getHeaders()
-    {
-        return Arr::only($this->headers, array_keys($this->getColumns()));
-    }
-
-    /**
-     * Get the column names to show (lowercase table headers).
-     *
-     * @return array
-     */
-    protected function getColumns()
-    {
-        $availableColumns = array_map('strtolower', $this->headers);
-
-        if ($this->option('compact')) {
-            return array_intersect($availableColumns, $this->compactColumns);
-        }
-
-        if ($columns = $this->option('columns')) {
-            return array_intersect($availableColumns, $columns);
-        }
-
-        return $availableColumns;
-    }
-
-    /**
      * Get the console command options.
      *
      * @return array
@@ -224,10 +178,6 @@ class RouteListCommand extends Command
     protected function getOptions()
     {
         return [
-            ['columns', null, InputOption::VALUE_OPTIONAL | InputOption::VALUE_IS_ARRAY, 'Columns to include in the route table'],
-
-            ['compact', 'c', InputOption::VALUE_NONE, 'Only show method, URI and action columns'],
-
             ['method', null, InputOption::VALUE_OPTIONAL, 'Filter the routes by method'],
 
             ['name', null, InputOption::VALUE_OPTIONAL, 'Filter the routes by name'],
@@ -236,7 +186,7 @@ class RouteListCommand extends Command
 
             ['reverse', 'r', InputOption::VALUE_NONE, 'Reverse the ordering of the routes'],
 
-            ['sort', null, InputOption::VALUE_OPTIONAL, 'The column (domain, method, uri, name, action, middleware) to sort by', 'uri'],
+            ['sort', null, InputOption::VALUE_OPTIONAL, 'The column (host, method, uri, name, action, middleware) to sort by', 'uri'],
         ];
     }
 }

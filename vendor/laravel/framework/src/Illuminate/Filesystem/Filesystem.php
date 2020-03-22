@@ -115,7 +115,7 @@ class Filesystem
      * @param  string  $path
      * @param  string  $contents
      * @param  bool  $lock
-     * @return int|bool
+     * @return int
      */
     public function put($path, $contents, $lock = false)
     {

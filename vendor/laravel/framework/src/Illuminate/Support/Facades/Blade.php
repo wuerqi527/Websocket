@@ -31,6 +31,6 @@ class Blade extends Facade
      */
     protected static function getFacadeAccessor()
     {
-        return 'blade.compiler';
+        return static::$app['view']->getEngineResolver()->resolve('blade')->getCompiler();
     }
 }
